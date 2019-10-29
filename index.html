@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- Load React -->
+    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+    <!-- Load React DOM-->
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.1.2/react-router-dom.min.js"></script>
+    <!-- Load Babel Compiler -->
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.js"></script>
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+    const root = document.getElementById('root');
+    const API = 'https://acme-users-api-rev.herokuapp.com/api';
+
+const { Component } = React;
+const { HashRouter, Route, Link, Switch } = ReactRouterDOM;
+
+const fetchUser = async ()=> {
+      const storage = window.localStorage;
+      const userId = storage.getItem('userId'); 
+      if(userId){
+        try {
+          return (await axios.get(`${API}/users/detail/${userId}`)).data;
+        }
+        catch(ex){
+          storage.removeItem('userId');
+          return fetchUser();
+        }
+      }
+      const user = (await axios.get(`${API}/users/random`)).data;
+      storage.setItem('userId', user.id);
+      return  user;
+    };
+
+
+
+fetchUser().then(user => console.log(user.id))
+
+
+// onSubmit=()=>{
+
+//    console.log(user)
+//     // axios.post(`${API}/users/`)
+// }
+
+class CreateForm extends Component{
+    constructor(){
+        super();
+        this.state = {
+            note : 'Create new note'
+
+        }       
+    }
+
+    render(){
+        const {note} = this.state;
+        console.log(this.state.note)
+        return(
+        <form>
+            <input type="text"
+            value = {note}
+            onChange = {(e) => this.setState({note:e.target.value})}
+            />
+            <button >Create</button>    
+        </form>
+        )
+}
+}
+
+console.log(<CreateForm/>)
+
+
+const Nav = (props)=>{
+    const path = props.location.path;
+    return(
+        <div>
+        <nav>
+            <Link to="/notes" className={ path == '/notes' ? 'selected' : ''}>Notes ()</Link>
+            <Link to="/archived"  className={ path == '/archived' ? 'selected' : ''}>Archived ()</Link>
+            <Link to="/notes/create"  className={ path == '/notes/create' ? 'selected' : ''}>Create </Link>
+         </nav>
+         <h1>Acme Not --Taker for Marjory Spencer </h1>
+         </div>
+    )
+}
+
+
+
+class App extends Component {
+    constructor() {
+        super();
+        this.state = {
+            note : 'Create new note'
+        }
+    }
+
+
+
+    render() {
+        const {note} = this.state;
+        console.log(note)
+        return(
+
+            <HashRouter>    
+                <Route component = {Nav}/>
+                <Route path="/notes/create" component= {CreateForm} />
+            </HashRouter>
+        )
+    }
+}
+
+ReactDOM.render(<App />, root)
+    </script>
+</body>
+
+</html>
